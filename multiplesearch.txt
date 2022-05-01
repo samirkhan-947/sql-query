@@ -1,0 +1,39 @@
+USE [FilterData]
+GO
+/****** Object:  StoredProcedure [dbo].[GetDataByIdName]    Script Date: 01-05-2022 18:06:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetDataByIdName]  
+    @status varchar(10),  
+    @name nvarchar(max)=null,  
+    @Fromdate DATETIME=null,  
+    @Todate DATETIME=null,  
+    @GenderId int = null  
+AS  
+BEGIN  
+if @status ='GET'  
+BEGIN  
+    Set NoCount ON  
+Declare @SQLQuery AS NVarchar(4000)  
+Declare @ParamDefinition AS NVarchar(2000)   
+    Set @SQLQuery ='SELECT P.*,C.catName,g.Vch_GenderName as Gender from [dbo].[Post] P  
+    Join Tbl_Gender g on P.int_GenderID = g.int_GenderID  
+    JOIN [dbo].[Category] C ON P.catId=C.catId   
+    where p.catid<>0'  
+    If (@Fromdate Is Not Null) AND (@Todate Is Not Null)  
+         Set @SQLQuery = @SQLQuery + 'And (p.fromdt BETWEEN @Fromdate AND @Todate)'  
+  
+    If (@name Is Not Null) and (@name <> '')  
+    Set @SQLQuery = @SQLQuery + 'and P.PostName LIKE '''+ '%' + @name + '%' + ''''  
+  
+    If (@GenderId Is Not Null) and (@GenderId <> 0)  
+    Set @SQLQuery = @SQLQuery + 'and g.int_GenderID = @GenderId'  
+  
+         Set @ParamDefinition = '@Fromdate DATETIME,@Todate DATETIME,@name nvarchar(max),@GenderId int'  
+         Execute sp_Executesql     @SQLQuery,@ParamDefinition,@Fromdate,@Todate,@name,@GenderId  
+    END  
+END  
+
+Execute GetDataByIdName 'GET','reza','1999-06-10 00:00:00.000','2000-06-10 00:00:00.000',1
